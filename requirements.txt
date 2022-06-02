@@ -1,0 +1,9 @@
+# gtfs bindings
+gtfs-realtime-bindings==0.0.7
+requests==2.27.1
+confluent-kafka==1.8.2
+
+
+# Development packages
+jedi==0.18.1
+black==22.3.0
