@@ -18,6 +18,11 @@ First, start all all the docker containers for kafka and flink: `docker-compose 
 
 **Processor**:
 
+For the processor, you also need the jar for the kafka sql connector for flink. The latest version
+can be found [here](https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/connectors/table/kafka/).
+
+As of writing, version [`1.15.0`](https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-kafka/1.15.0/flink-sql-connector-kafka-1.15.0.jar) is used
+
 ```bash
 $ cd processor
 # Create a virtual environment, e.g:

@@ -1,8 +1,12 @@
 # gtfs bindings
 gtfs-realtime-bindings==0.0.7
 requests==2.27.1
+
+# Kafka
 confluent-kafka==1.8.2
 
+# Flink
+apache-flink==1.15.0
 
 # Development packages
 jedi==0.18.1
