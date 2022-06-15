@@ -2,6 +2,11 @@
   padding: 0 2rem;
 }
 
+.map {
+  height: 70vh;
+  margin: 1em;
+}
+
 .main {
   min-height: 100vh;
   padding: 4rem 0;
