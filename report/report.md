@@ -39,7 +39,7 @@ pandoc-latex-environment:
 
 **Project repository**: <https://github.com/LudvigHz/RTBDP-project>
 
-**Git tag**: v1.0.0 (<https://github.com/LudvigHz/RTBDP-project>)
+**Git tag**: v1.0.0 (<https://github.com/LudvigHz/RTBDP-project/tree/v1.0.0>)
 
 \setcounter{tocdepth}{1}
 \tableofcontents
@@ -64,7 +64,7 @@ specifically the delays of transport lines (buses, trains, trams, ferries) and a
 transport lines and show the relation of delays in the transport system in relation to geographical
 data.
 
-# Data source
+# Data source\label{sec:api}
 
 The data source used for this project is the Entur real-time API[^entur-api]. Entur is a
 state-owned, neutral company
@@ -76,7 +76,7 @@ provide data to Entur, so we can count on the data being extensive and correct.
 
 [^entur-api]: <https://developer.entur.org/pages-real-time-intro>
 
-## The real-time API\label{sec:api}
+## The real-time API
 
 Entur provides extensive real-time data through several APIs.
 
@@ -175,6 +175,12 @@ websocket proxy to kafka using the `kafka-proxy-ws` library. This library is qui
 unmaintained, but for a lack of better options, this library does the job perfectly and provides a
 reliable interface to kafka.
 
+The web app also uses the google maps API to display the data. This API has a free tier but requires
+a valid API key to be able to use properly.
+
+> NOTE: For the submission of this project, and API key is submitted alongside this report in order
+> to run and evaluate the project. This key will be invalidated after the exam.
+
 ## Architecture
 
 ![\label{fig:diagram}Diagram showing the high-level architecture of the application and how the
@@ -218,7 +224,7 @@ section).
 The main part of the processing pipeline is quite simple. First off, we create the source table wit
 the kafka connector, as well as the table for the stop data using the filesystem connector. Lastly
 we also create the sink `avg-trip-delays` table for the resulting data. Then the whole processing is
-done in a single query: \\
+done in a single query:
 
 ```sql
 SELECT
