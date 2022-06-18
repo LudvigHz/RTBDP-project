@@ -6,7 +6,7 @@ from pyflink.table import StreamTableEnvironment
 KAFKA_TOPIC = "trip-updates"
 KAFKA_SINK_TOPIC = "avg-stop-delays"
 KAFKA_BOOTSTRAP_SERVERS = "localhost:29092"
-STOPS_DATA_FILE = 'stops.txt'
+STOPS_DATA_FILE = "stops.txt"
 
 
 def processor():
@@ -75,7 +75,9 @@ def processor():
             `location_type` STRING,
             `vehicle_type` STRING,
             `avg_departure_delay` DOUBLE,
-            `avg_arrival_delay` DOUBLE
+            `avg_arrival_delay` DOUBLE,
+            `window_start` TIMESTAMP(3),
+            `window_end` TIMESTAMP(3)
         ) WITH (
             'connector' = 'kafka',
             'topic' = '{KAFKA_SINK_TOPIC}',
@@ -89,18 +91,6 @@ def processor():
 
     print("Created sink table `Stop_delays`")
 
-    # tenv.execute_sql(
-                    # """
-                     # SELECT
-                        # stopId,
-                        # stop_lat,
-                        # ts,
-                        # JSON_VALUE(`departure`, '$.delay') AS `departure_delay`
-                    # FROM Stop_updates
-                    # INNER JOIN Stops on stopId = Stops.stop_id
-                    # LIMIT 10
-    # """).print()
-
     stop_delays = tenv.sql_query(
         """
         SELECT
@@ -111,14 +101,26 @@ def processor():
             `location_type`,
             `vehicle_type`,
             `avg_departure_delay`,
-            `avg_arrival_delay`
+            `avg_arrival_delay`,
+            `window_start`,
+            `window_end`
         FROM (
             SELECT
                 `stopId`,
-                AVG(JSON_VALUE(`departure`, '$.delay' RETURNING INTEGER DEFAULT 0 ON EMPTY)) AS `avg_departure_delay`,
-                AVG(JSON_VALUE(`arrival`, '$.delay' RETURNING INTEGER DEFAULT 0 ON EMPTY)) AS `avg_arrival_delay`,
+                AVG(JSON_VALUE(
+                    `departure`,
+                    '$.delay' RETURNING INTEGER DEFAULT 0 ON EMPTY)
+                ) AS `avg_departure_delay`,
+                AVG(JSON_VALUE(
+                    `arrival`,
+                    '$.delay' RETURNING INTEGER DEFAULT 0 ON EMPTY)
+                ) AS `avg_arrival_delay`,
+                `window_start`,
+                `window_end`,
                 COUNT(*) as `count`
-            FROM TABLE(TUMBLE(TABLE Stop_updates, DESCRIPTOR(ts), INTERVAL '30' SECONDS))
+            FROM TABLE(
+                TUMBLE(TABLE Stop_updates, DESCRIPTOR(ts), INTERVAL '30' SECONDS)
+            )
             GROUP BY `stopId`, `window_start`, `window_end`
         )
         INNER JOIN Stops ON stopId = Stops.stop_id
