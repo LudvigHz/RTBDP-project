@@ -32,6 +32,7 @@ def processor():
              'topic' = '{KAFKA_TOPIC}',
              'properties.bootstrap.servers' = '{KAFKA_BOOTSTRAP_SERVERS}',
              'properties.group.id' = 'processor-python',
+             'properties.retention.minutes' = '5',
              'scan.startup.mode' = 'earliest-offset',
              'format' = 'json'
          )

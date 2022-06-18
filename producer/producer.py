@@ -4,8 +4,6 @@ import time
 import requests
 from confluent_kafka import KafkaException, Producer
 from confluent_kafka.admin import AdminClient, NewTopic
-from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.schema_registry.protobuf import Schema
 from google.protobuf.json_format import MessageToJson
 from google.transit import gtfs_realtime_pb2
 
@@ -61,20 +59,6 @@ def setup_topic():
         logging.info(f"Found topic {current_src.topic} with 4 partitions")
 
 
-def configure_schema():
-
-    client = SchemaRegistryClient({"url": "http://localhost:8085/"})
-
-    try:
-        with open("gtfs-realtime.proto", "r") as proto_file:
-            content = proto_file.read()
-
-            schema = Schema(content, "PROTOBUF")
-            client.register_schema("gtfs", schema)
-    except FileExistsError:
-        logging.error("Could not find gtfs-realtime.proto file")
-
-
 def process_message(msg, **kwargs):
     produce = kwargs.get("produce", None)
     ts = msg.header.timestamp * 1000
@@ -86,7 +70,6 @@ def process_message(msg, **kwargs):
 
 
 def produce():
-    configure_schema()
     setup_topic()
     logging.info("Starting producer")
     config = {
