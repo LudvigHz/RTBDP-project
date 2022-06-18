@@ -84,6 +84,8 @@ const Home: NextPage = () => {
   const [ws, setWs] = useState<WebSocket>();
   const [state, dispatch] = useReducer(msgReducer, initialState);
   const [mapPoints, setMapPoints] = useState(null);
+  const [intensity, setIntensity] = useState(1000);
+  const [heatmap, setHeatmap] = useState();
 
   useEffect(() => {
     if (!mapsLoaded) return;
@@ -99,8 +101,10 @@ const Home: NextPage = () => {
 
     const heatMap = new google.maps.visualization.HeatmapLayer({
       data: mapPoints,
+      maxIntensity: 1000,
     });
     heatMap.setMap(map);
+    setHeatmap(heatMap);
   }, [mapsLoaded]);
 
   useEffect(() => {
@@ -125,12 +129,18 @@ const Home: NextPage = () => {
       mapPoints.clear();
       state.stops.forEach((stop) => {
         mapPoints.push({
-          weight: stop.avg_arrival_delay + 0.5,
+          weight: stop.avg_arrival_delay + 1,
           location: new google.maps.LatLng(stop.stop_lat, stop.stop_lon),
         });
       });
     }
   }, [state.stops, mapPoints]);
+
+  useEffect(() => {
+    if (heatmap) {
+      heatmap.set("maxIntensity", intensity);
+    }
+  });
 
   const topStops = [...state.stops]
     .sort((a, b) => b.avg_arrival_delay - a.avg_arrival_delay)
@@ -150,7 +160,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Text h2>Delays in publc transport in Norway</Text>
+      <Text h2>Norway public transport delays live heatmap</Text>
       <Text>
         This heatmap shows where there are delays in the public transport system
         in Norway. The map is using real-time data from{" "}
@@ -158,6 +168,19 @@ const Home: NextPage = () => {
           Entur
         </a>
       </Text>
+
+      <Container>
+        <span>Heatmap intensity: </span>
+        <input
+          type="range"
+          min="10"
+          max="5000"
+          step="10"
+          value={intensity}
+          onChange={(e) => setIntensity(Number(e.target.value))}
+        />
+        <span> ({intensity})</span>
+      </Container>
 
       <div id="map" className={styles.map} />
 
