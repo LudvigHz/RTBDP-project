@@ -12,11 +12,16 @@ This project requires
 
 ## Setup
 
+### Kafka
+
 > All setup instructions assume a \*nix system, preferably some Linux variant.
+
+Copy the example environment file. Most likely it does not need to be modified:
+`cp .env.example .env`
 
 First, start all all the docker containers for kafka and flink: `docker-compose up -d`.
 
-**Python setup**
+### Python setup
 
 The producer and processor can run using the same python interpreter and virtual environment.
 
@@ -48,13 +53,17 @@ can be found [here](https://nightlies.apache.org/flink/flink-docs-release-1.15/d
 
 As of writing, version [`1.15.0`](https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-kafka/1.15.0/flink-sql-connector-kafka-1.15.0.jar) is used
 
-**Web app**:
+### Web app
 
 > Open another shell to run the front-end beside the stream processor
 
 ```bash
 $ cd webapp
 ```
+
+To use the google maps API, you need an API from google cloud. Use the .env template and insert the
+API key:
+`cp .env.example .env.local` and fill in the API key in the `.env.local` file.
 
 First, run the `kafka-proxy`. This application will create a WebSocket proxy to kafka that we can
 use to access the kafka topic directly from the browser.

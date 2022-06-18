@@ -41,96 +41,6 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
       KAFKA_LOG4J_ROOT_LOGLEVEL: 'INFO'
 
-  # you must have COMPOSE_PROFILES=schemaregistry1,... in .env to start this container
-  schemaregistry1:
-    image: confluentinc/cp-schema-registry:7.0.1
-    container_name: schemaregistry1
-    profiles:
-      - schemaregistry1
-    depends_on:
-      - zookeeper
-      - broker1
-    ports:
-      - '${PORT_SCHEMA_REGISTRY:-8085}:8085'
-    environment:
-      SCHEMA_REGISTRY_LISTENERS: 'http://schemaregistry1:8085'
-      SCHEMA_REGISTRY_HOST_NAME: 'schemaregistry1'
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://broker1:9092'
-      SCHEMA_REGISTRY_DEBUG: 'true'  # generate extra debug info in error responses
-      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: 'INFO'
-
-  # you must have COMPOSE_PROFILES=connect1,schemaregistry1... in .env to start this container
-  # (here it is configured so to use also schemaregistry1, hence you need to enable also that)
-  connect1:
-    # NOTE: uncomment following line & comment the one after to build & use a custom Kafka Connect image
-    # build: custom_connect_image
-    image: confluentinc/cp-kafka-connect:7.0.1
-    container_name: connect1
-    profiles:
-      - connect1
-    depends_on:
-      - broker1
-      - schemaregistry1
-    ports:
-      - '${PORT_CONNECT:-8083}:8083'
-    volumes:
-      - connect1-plugins:/usr/share/confluent-hub-components
-      - ./data:/data
-      - ./kafka-connect-entrypoint.sh:/entrypoint.sh           # NOTE: may comment if using a custom image
-    entrypoint: /entrypoint.sh                                 # NOTE: may comment if using a custom image
-    environment:
-      # Network configuration
-      CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092'
-      CONNECT_REST_PORT: '8083'
-      CONNECT_REST_ADVERTISED_HOST_NAME: 'connect1'
-      # Location where plugins are stored (we map it via a volume to a host
-      # directory, so place connectors there)
-      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components'
-      # Connect workers belong to groups,
-      # and each group store its internal data in some Kafka topics
-      # configured here
-      CONNECT_GROUP_ID: 'connectgroup1'
-      CONNECT_CONFIG_STORAGE_TOPIC: '_connectgroup1_configs'
-      CONNECT_OFFSET_STORAGE_TOPIC: '_connectgroup1_offset'
-      CONNECT_STATUS_STORAGE_TOPIC: '_connectgroup1_status'
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
-      # Logging configuration
-      CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
-      # Converter configuration for connector data - choose one of the following
-      # -- (1) StringConverter --
-      # CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
-      # CONNECT_VALUE_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
-      # -- (2) JsonConverter --
-      # CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
-      # CONNECT_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
-      # -- (3) AvroConverter --
-      CONNECT_KEY_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
-      CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
-      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schemaregistry1:8085'
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schemaregistry1:8085'
-
-  ksqldb-server:
-    image: confluentinc/cp-ksqldb-server:7.0.2
-    container_name: ksqldb-server
-    profiles:
-      - ksqldb-server
-    depends_on:
-      - broker1
-      - schemaregistry1
-    ports:
-      - '${PORT_KSQLDB:-8088}:8088'
-    environment:
-      KSQL_HOST_NAME: ksqldb-server
-      KSQL_LISTENERS: 'http://0.0.0.0:8088'
-      KSQL_BOOTSTRAP_SERVERS: 'broker1:9092'
-      KSQL_KSQL_SCHEMA_REGISTRY_URL: 'http://schemaregistry1:8085'
-      KSQL_KSQL_CONNECT_URL: 'http://connect1:8083'
-      KSQL_KSQL_SERVICE_ID: 'ksqldb'
-      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: '1'
-      KSQL_LOG4J_ROOT_LOGLEVEL: 'INFO'
-
   kafka-ui:
     image: provectuslabs/kafka-ui:0.3.3
     container_name: kafka-ui
@@ -152,36 +62,7 @@ services:
       LOGGING_LEVEL_ROOT: 'WARN'
       LOGGING_LEVEL_COM_PROVECTUS: 'WARN'
 
-
-  ###################################
-  ### FLINK
-  ###################################
-
-  flink-jobmanager:
-    image: ${FLINK_IMAGE:-flink:1.14.4-scala_2.12}
-    container_name: flink-jobmanager
-    ports:
-      - '${PORT_FLINK:-8081}:8081'
-    volumes:
-      - .:/data
-    command: jobmanager
-    environment:
-      FLINK_PROPERTIES: |
-        jobmanager.rpc.address: flink-jobmanager
-
-  flink-taskmanager1:
-    image: ${FLINK_IMAGE:-flink:1.14.4-scala_2.12}
-    container_name: flink-taskmanager1
-    command: taskmanager
-    environment:
-      FLINK_PROPERTIES: |
-        jobmanager.rpc.address: flink-jobmanager
-        taskmanager.numberOfTaskSlots: ${FLINK_TASK_SLOTS:-4}
-        parallelism.default: ${FLINK_DEFAULT_PARALLELISM:-1}
-
-
 volumes:
   zookeeper-data:
   zookeeper-logs:
   broker1-data:
-  connect1-plugins:
